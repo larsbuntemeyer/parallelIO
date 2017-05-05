@@ -2,7 +2,7 @@
 #
 #SBATCH --job-name="parallelIO"      # Specify job name
 #SBATCH --partition=compute,compute2
-#SBATCH --ntasks=100
+#SBATCH --ntasks=16
 #SBATCH --cpus-per-task=2
 #SBATCH --time=00:30:00        # Set a limit on the total run time
 #SBATCH --mail-type=FAIL       # Notify user by email in case of job failure
@@ -42,4 +42,5 @@ export LD_LIBRARY_PATH=${NETCDFC}/lib:${NETCDFF}/lib:${LD_LIBRARY_PATH}
 # Use srun (not mpirun or mpiexec) command to launch programs compiled with any MPI library
 #map --profile srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
 #map --profile srun --cpu_bind=cores --distribution=block:cyclic main
-time srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
+#time srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
+time srun main 

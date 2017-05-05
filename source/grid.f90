@@ -6,8 +6,8 @@ implicit none
 
 ! local global resolution
 integer, parameter :: NDIMS=2
-integer, parameter :: NX_GLOBAL=100
-integer, parameter :: NY_GLOBAL=100
+integer, parameter :: NX_GLOBAL=433
+integer, parameter :: NY_GLOBAL=433
 integer, parameter :: NZ_GLOBAL=100
 integer, parameter :: NLAYER=10
 

@@ -6,8 +6,9 @@ module mpi
  ! code.
  integer :: nproc, my_rank, ierr, dims(2), coord(2), vu, err
  logical :: period(2), reorder
- integer, parameter :: px=10
- integer, parameter :: py=10
+ integer, parameter :: px=4
+ integer, parameter :: py=4
+ integer :: all_coord(px*py,1,1)
 
 contains
 
@@ -35,14 +36,26 @@ contains
 
   do i=0,nproc-1
    if(i==my_rank) then
-  !   call MPI_CART_COORDS(vu,my_rank,2,coord,err)
+     call MPI_CART_COORDS(vu,my_rank,2,coord,err)
      print*,'P:',my_rank,' my coordinates are',coord
    else
-     call MPI_BARRIER(MPI_COMM_WORLD)
+     call MPI_BARRIER(vu,err)
    endif
   enddo
 
-  
+  call MPI_Allgather(coord, 2, MPI_INTEGER, all_coord, 2, MPI_INTEGER, &
+                     MPI_COMM_WORLD, err)
+
+  if(i==my_rank) then
+    do i=0,nproc-1
+     call MPI_CART_COORDS(vu,my_rank,2,coord,err)
+     print*,'P:',my_rank,' my coordinates are',coord
+    else
+     call MPI_BARRIER(vu,err)
+    enddo
+  endif
+   
+ 
  end subroutine init_mpi
 
 

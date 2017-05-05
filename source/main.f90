@@ -20,8 +20,8 @@
 program parallelIO
   use grid
   use io
-  use mpi
   use dbase
+  use mo_decomp, only: decomp
   implicit none
 
 
@@ -46,9 +46,11 @@ program parallelIO
  
   call init_mpi
 
-  call init_grid
+  !call init_grid
 
-  call init_data
+  call decomp
+
+  !call init_data
 
   !if(parallel_write) then
   !  call system_clock(t_start)
