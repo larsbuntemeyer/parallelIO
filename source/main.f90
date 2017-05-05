@@ -50,50 +50,50 @@ program parallelIO
 
   call init_data
 
-  if(parallel_write) then
-    call system_clock(t_start)
-    call init_file(.true.)
-    call system_clock(t_end)
-    t_open = (t_end-t_start)/rate
-    call system_clock(t_start)
-    do k=1,NLAYER
-      call write_field(field,nx,ny,k,.true.)
-    enddo
-    call system_clock(t_end)
-    t_write = (t_end-t_start)/rate
-    call system_clock(t_start)
-    call check( nf90_close(ncid))
-    call system_clock(t_end)
-    t_close = (t_end-t_start)/rate
-  elseif(my_rank==0) then
-    call system_clock(t_start)
-    call init_file(.false.)
-    call system_clock(t_end)
-    t_open = (t_end-t_start)/rate
-    do k=1,NLAYER 
-      call system_clock(t_start)
-      call collect_data
-      call system_clock(t_end)
-      t_collect = t_collect + (t_end-t_start)/rate
-      call system_clock(t_start)
-      call write_field(globalField,nx_global,ny_global,k,.true.)
-      call system_clock(t_end)
-      t_write = t_write + (t_end-t_start)/rate
-    enddo
-    call system_clock(t_end)
-    t_write = (t_end-t_start)/rate
-    call system_clock(t_start)
-    call check( nf90_close(ncid))
-    call system_clock(t_end)
-    t_close = (t_end-t_start)/rate
-  else
-    call system_clock(t_start)
-    do k=1,NLAYER 
-      call collect_data
-    enddo
-    call system_clock(t_end)
-    t_collect = (t_end-t_start)/rate
-  endif
+  !if(parallel_write) then
+  !  call system_clock(t_start)
+  !  call init_file(.true.)
+  !  call system_clock(t_end)
+  !  t_open = (t_end-t_start)/rate
+  !  call system_clock(t_start)
+  !  do k=1,NLAYER
+  !    call write_field(field,nx,ny,k,.true.)
+  !  enddo
+  !  call system_clock(t_end)
+  !  t_write = (t_end-t_start)/rate
+  !  call system_clock(t_start)
+  !  call check( nf90_close(ncid))
+  !  call system_clock(t_end)
+  !  t_close = (t_end-t_start)/rate
+  !elseif(my_rank==0) then
+  !  call system_clock(t_start)
+  !  call init_file(.false.)
+  !  call system_clock(t_end)
+  !  t_open = (t_end-t_start)/rate
+  !  do k=1,NLAYER 
+  !    call system_clock(t_start)
+  !    call collect_data
+  !    call system_clock(t_end)
+  !    t_collect = t_collect + (t_end-t_start)/rate
+  !    call system_clock(t_start)
+  !    call write_field(globalField,nx_global,ny_global,k,.true.)
+  !    call system_clock(t_end)
+  !    t_write = t_write + (t_end-t_start)/rate
+  !  enddo
+  !  call system_clock(t_end)
+  !  t_write = (t_end-t_start)/rate
+  !  call system_clock(t_start)
+  !  call check( nf90_close(ncid))
+  !  call system_clock(t_end)
+  !  t_close = (t_end-t_start)/rate
+  !else
+  !  call system_clock(t_start)
+  !  do k=1,NLAYER 
+  !    call collect_data
+  !  enddo
+  !  call system_clock(t_end)
+  !  t_collect = (t_end-t_start)/rate
+  !endif
 
   call system_clock(c_end)
 

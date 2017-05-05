@@ -18,8 +18,6 @@ integer nx,ny,nz
 integer ib_global,jb_global,kb_global
 
 ! processor decomposition
-integer, parameter :: px=10
-integer, parameter :: py=10
 integer, parameter :: pz=1
 
 

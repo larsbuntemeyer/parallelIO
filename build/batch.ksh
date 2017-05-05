@@ -42,5 +42,4 @@ export LD_LIBRARY_PATH=${NETCDFC}/lib:${NETCDFF}/lib:${LD_LIBRARY_PATH}
 # Use srun (not mpirun or mpiexec) command to launch programs compiled with any MPI library
 #map --profile srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
 #map --profile srun --cpu_bind=cores --distribution=block:cyclic main
-#map --profile srun main
 time srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
