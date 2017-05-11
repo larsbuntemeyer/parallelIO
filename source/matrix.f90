@@ -75,11 +75,11 @@ implicit none
 contains
 
 subroutine alltoall(myrow, mycol, rank, size, blocks, blocksize,   &
-                    globalsizes, localsizes, globaldata, localdata)
+                    globalsizes, localsizes, globaldata, localdata, nguard)
 
 implicit none
 
-integer,   intent(in)   :: myrow, mycol, rank, size, blocksize
+integer,   intent(in)   :: myrow, mycol, rank, size, blocksize, nguard
 integer,   intent(in)   :: blocks(2), globalsizes(2), localsizes(2)
 character, intent(in)   :: globaldata(:,:)
 character, intent(out)  :: localdata(:,:)
@@ -93,8 +93,8 @@ integer :: recvdispls(0:size-1)
 integer :: recvtypes(0:size-1)
 
 integer :: i,j,proc,ierr,row,col,idx
-integer :: blocktypes(size), subsizes(2)
-integer :: starts(2)
+integer :: blocktypes(size), subtypes(size), subsizes(2), halosizes(2)
+integer :: starts(2), halo_starts
 
 sendcounts = 0
 senddispls = 0
@@ -104,12 +104,15 @@ recvcounts = 0
 recvdispls = 0
 recvtypes  = MPI_CHAR
 
-recvcounts(0) = localsizes(1) * localsizes(2)
+recvcounts(0) = 1 !localsizes(1) * localsizes(2)
 recvdispls(0) = 0
 
-! The originating process needs to allocate and fill the source array,
-! and then define types defining the array chunks to send, and 
-! fill out senddispls, sendcounts (1) and sendtypes.
+halosizes(1) = localsizes(1) + 2*nguard
+halosizes(2) = localsizes(2) + 2*nguard
+
+starts = (/nguard,nguard/)
+call MPI_TYPE_CREATE_SUBARRAY(2,halosizes,localsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,recvtypes(0),ierr)
+call MPI_TYPE_COMMIT(recvtypes(0),ierr)
 
 if (rank==0) then
   ! 4 types of blocks - 
@@ -164,6 +167,7 @@ character, allocatable :: localdata(:,:)
 integer   :: myrow, mycol
 integer   ::  i,j,proc
 integer, parameter :: BLOCKSIZE = 3
+integer, parameter :: NGUARD = 1 
 character(len=*), parameter :: method = 'alltoall'
 
 call MPI_INIT(ierr)
@@ -199,18 +203,18 @@ localsizes = BLOCKSIZE
 if (isLastRow(myrow,blocks)) localsizes(1) = localsizes(1) + 1
 if (isLastCol(mycol,blocks)) localsizes(2) = localsizes(2) + 1
 !localdata = allocchar2darray(localsizes(1),localsizes(2))
-allocate(localdata(localsizes(1),localsizes(2)))
+allocate(localdata(localsizes(1)+2*nguard,localsizes(2)+2*nguard))
 localdata = '.'
 !
 !
 call alltoall(myrow, mycol, rank, size, blocks, blocksize,   &
-              globalsizes, localsizes, globaldata, localdata)
+              globalsizes, localsizes, globaldata, localdata, nguard)
 !
 !
 do proc=0,size-1
   if(proc==rank) then
     print*, 'Rank :', proc
-    call printarray(localdata, localsizes(1),localsizes(2))
+    call printarray(localdata, localsizes(1)+2*nguard,localsizes(2)+2*nguard)
   endif
   call MPI_BARRIER(MPI_COMM_WORLD, ierr)
 enddo

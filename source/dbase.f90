@@ -3,7 +3,7 @@
 module dbase
 
 use grid!, only: nx,ny,NX_GLOBAL,NY_GLOBAL
-use mpi!, only : my_rank
+use mo_decomp
 
 implicit none
 
@@ -15,10 +15,10 @@ contains
 subroutine init_data
  implicit none
  integer :: i,j,k
- allocate(field(nx,ny))
+ allocate(field(ie,je))
  !call allocate_field
- do j=1,ny
-  do i=1,nx
+ do j=1,je
+  do i=1,ie
     field(i,j) = real(my_rank)
   enddo
  enddo 
@@ -27,7 +27,7 @@ end subroutine init_data
 
 subroutine allocate_field
  implicit none
- allocate(field(nx,ny))
+ allocate(field(ie,je))
 end subroutine allocate_field
 
 subroutine collect_data
@@ -47,6 +47,10 @@ subroutine collect_data
      allocate(globalField(NX_GLOBAL,NY_GLOBAL))
    endif
    globalField = 0.0
+ else
+   if(.not.(allocated(globalField))) then
+     allocate(globalField(0,0))
+   endif
  endif
  !
  sizes    = [NX_GLOBAL,NY_GLOBAL]     ! size of global array
