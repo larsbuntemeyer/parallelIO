@@ -104,6 +104,7 @@ character, intent(out)  :: localdata(:,:,:)
 integer :: proc, ierr, facetype(2), sendtag, recvtag
 integer :: sizes(3), subsizes(3), starts(3)
 integer :: a=1, b=2
+integer status(MPI_STATUS_SIZE)
 
 do proc=0,size
   if(proc==rank) then
@@ -130,52 +131,39 @@ call MPI_TYPE_COMMIT(facetype(2),ierr)
 sendtag=1
 recvtag=1
 
-if(rank.eq.0) call MPI_Send(a,1, MPI_INTEGER, 1, sendtag, MPI_COMM_WORLD, ierr)
-!
-if(rank.eq.1) call MPI_Recv(b,1, MPI_INTEGER, 0, recvtag, MPI_COMM_WORLD, ierr)
+!if(rank.eq.0) call MPI_Send(a,1, MPI_INTEGER, 1, sendtag, MPI_COMM_WORLD, ierr)
+!!
+!if(rank.eq.1) call MPI_Recv(b,1, MPI_INTEGER, 0, recvtag, MPI_COMM_WORLD, status, ierr)
 !
 do proc=0,size
   if(proc==rank) then
-    print*, rank, a,b
+    print*, rank, a,b, localsizes
   else
     call MPI_BARRIER(comm_cart, ierr)
   endif
 enddo
-!! Send my boundary to North and receive from South
-!call MPI_Sendrecv(localdata(1,localsizes(2)+1,1),        1, facetype(2), neighbor(N), sendtag,       &
-!                  localdata(1,1,1),                      1, facetype(2), neighbor(S), recvtag,              &
-!                  comm_cart, ierr)
-!
-!! Send my boundary to South and receive from North
-!call MPI_Sendrecv(localdata(1,1+nguard,1),               1, facetype(2), neighbor(S), sendtag,         &
-!                  localdata(1,localsizes(2)+nguard+1,1), 1, facetype(2), neighbor(N), recvtag,  &
-!                  comm_cart, ierr)
+! Send my boundary to North and receive from South
+call MPI_Sendrecv(localdata(1,nguard+1,1),                 1, facetype(2), neighbor(N), sendtag,       &
+                  localdata(1,nguard+localsizes(2)+1,1),   1, facetype(2), neighbor(S), recvtag,       &
+                  comm_cart, status, ierr)
 
-!if(neighbor(N).ne.-2) then
-!!! Send my boundary to North and receive from North
-!call MPI_Sendrecv(localdata(1,localsizes(2)+1,1),        1, facetype(2), neighbor(N), sendtag,       &
-!                  localdata(1,localsizes(2)+1+nguard,1), 1, facetype(2), neighbor(N), recvtag,              &
-!                  comm_cart, ierr)
-!
-!endif
-!if(neighbor(S).ne.-2) then
-!! Send my boundary to South and receive from South
-!call MPI_Sendrecv(localdata(1,nguard+1,1),               1, facetype(2), neighbor(S), sendtag,         &
-!                  localdata(1,1,1),                      1, facetype(2), neighbor(S), recvtag,  &
-!                  comm_cart, ierr)
-!endif
-!sendtag=5006
-!recvtag=5006
+! Send my boundary to South and receive from North
+call MPI_Sendrecv(localdata(1,localsizes(2)+1,1),   1, facetype(2), neighbor(S), sendtag,       &
+                  localdata(1,1,1),                        1, facetype(2), neighbor(N), recvtag,       &
+                  comm_cart, status, ierr)
+
+sendtag=2
+recvtag=2
 
 ! Send my boundary to East and receive from West
-!call MPI_Sendrecv(localdata(localsizes(1)+1,1,1),        1, facetype(1), neighbor(E), sendtag,       &
-!                  localdata(1,1,1),                      1, facetype(1), neighbor(W), recvtag,              &
-!                  comm_cart, ierr)
-!
-!! Send my boundary to West and receive from East
-!call MPI_Sendrecv(localdata(1,1,1),                      1, facetype(1), neighbor(W), sendtag,         &
-!                  localdata(localsizes(1)+nguard+1,1,1), 1, facetype(1), neighbor(E), recvtag,  &
-!                  comm_cart, ierr)
+call MPI_Sendrecv(localdata(localsizes(1)+1,1,1),        1, facetype(1), neighbor(E), sendtag,       &
+                  localdata(1,1,1),                      1, facetype(1), neighbor(W), recvtag,              &
+                  comm_cart, status, ierr)
+
+! Send my boundary to West and receive from East
+call MPI_Sendrecv(localdata(1+nguard,1,1),                      1, facetype(1), neighbor(W), sendtag,         &
+                  localdata(localsizes(1)+nguard+1,1,1), 1, facetype(1), neighbor(E), recvtag,  &
+                  comm_cart, status, ierr)
 
 end subroutine updateBounds
 
@@ -287,15 +275,15 @@ integer, parameter :: NGUARD = 1
 integer, parameter :: BLOCKSIZE = 5
 integer :: dims(2), coord(2)
 logical :: period(2), reorder
-integer, parameter :: px=3, py=3
+integer, parameter :: px=2, py=2
 character(len=*), parameter :: method = 'alltoall'
 
 call MPI_INIT(ierr)
 call MPI_COMM_RANK(MPI_COMM_WORLD, rank, ierr ) 
 call MPI_COMM_SIZE(MPI_COMM_WORLD, size, ierr ) 
 
-period(1)=.true.
-period(2)=.true.
+period(1)=.false.
+period(2)=.false.
 reorder=.true.
 
 allocate(all_coord(2*px*py))
