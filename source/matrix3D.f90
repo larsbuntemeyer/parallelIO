@@ -270,9 +270,9 @@ character, pointer     :: globaldata(:,:,:)
 character, allocatable :: localdata(:,:,:)
 integer   :: myrow, mycol
 integer   ::  i,j,k,proc
-integer, parameter :: LAYERS = 1
+integer, parameter :: LAYERS = 2
 integer, parameter :: NGUARD = 1
-integer, parameter :: BLOCKSIZE = 5
+integer, parameter :: BLOCKSIZE = 3
 integer :: dims(2), coord(2)
 logical :: period(2), reorder
 integer, parameter :: px=2, py=2
