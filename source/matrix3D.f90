@@ -131,17 +131,7 @@ call MPI_TYPE_COMMIT(facetype(2),ierr)
 sendtag=1
 recvtag=1
 
-!if(rank.eq.0) call MPI_Send(a,1, MPI_INTEGER, 1, sendtag, MPI_COMM_WORLD, ierr)
-!!
-!if(rank.eq.1) call MPI_Recv(b,1, MPI_INTEGER, 0, recvtag, MPI_COMM_WORLD, status, ierr)
-!
-do proc=0,size
-  if(proc==rank) then
-    print*, rank, a,b, localsizes
-  else
-    call MPI_BARRIER(comm_cart, ierr)
-  endif
-enddo
+
 ! Send my boundary to North and receive from South
 call MPI_Sendrecv(localdata(1,nguard+1,1),                 1, facetype(2), neighbor(N), sendtag,       &
                   localdata(1,nguard+localsizes(2)+1,1),   1, facetype(2), neighbor(S), recvtag,       &
@@ -250,6 +240,92 @@ call MPI_Alltoallw(globaldata, sendcounts, senddispls, sendtypes,     &
 
 end subroutine alltoall
 
+
+
+subroutine collect(myrow, mycol, rank, size, blocks, blocksize,   &
+                    globalsizes, localsizes, globaldata, localdata, nguard)
+
+implicit none
+
+integer,   intent(in)   :: myrow, mycol, rank, size, blocksize, nguard
+integer,   intent(in)   :: blocks(2), globalsizes(3), localsizes(3)
+character, intent(in)   :: globaldata(:,:,:)
+character, intent(out)  :: localdata(:,:,:)
+
+
+integer :: sendcounts(0:size-1)
+integer :: senddispls(0:size-1)
+integer :: sendtypes(0:size-1)
+integer :: recvcounts(0:size-1)
+integer :: recvdispls(0:size-1)
+integer :: recvtypes(0:size-1)
+
+integer :: i,j,proc,ierr,row,col,idx
+integer :: blocktypes(size), subsizes(3), halosizes(3)
+integer :: starts(3)
+
+sendcounts = 0
+senddispls = 0
+sendtypes  = MPI_CHAR
+
+recvcounts = 0
+recvdispls = 0
+recvtypes  = MPI_CHAR
+
+recvcounts(0) = 1 !localsizes(1) * localsizes(2) * localsizes(3)
+recvdispls(0) = 0
+
+
+halosizes(1) = localsizes(1) + 2*nguard
+halosizes(2) = localsizes(2) + 2*nguard
+halosizes(3) = localsizes(3) 
+
+starts = (/nguard,nguard,0/)
+call MPI_TYPE_CREATE_SUBARRAY(3,halosizes,localsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,recvtypes(rank),ierr)
+call MPI_TYPE_COMMIT(recvtypes(rank),ierr)
+
+! The originating process needs to allocate and fill the source array,
+! and then define types defining the array chunks to send, and 
+! fill out senddispls, sendcounts (1) and sendtypes.
+
+if (rank==0) then
+  ! 4 types of blocks - 
+  ! blocksize*blocksize, blocksize+1*blocksize, blocksize*blocksize+1, blocksize+1*blocksize+1
+  starts      = (/0,0,0/)
+  subsizes(3) = localsizes(3)
+  do i=0,1
+    subsizes(1) = blocksize!+i
+    do j=0,1
+      subsizes(2) = blocksize!+j
+      call MPI_TYPE_CREATE_SUBARRAY(3,globalsizes,subsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,blocktypes(2*j+i+1),ierr)
+      call MPI_TYPE_COMMIT(blocktypes(2*j+i+1),ierr)
+    enddo
+  enddo 
+  ! now figure out the displacement and type of each processor's data
+  do proc=0,size-1
+    call rowcol(proc,blocks,row,col)
+    col = all_coord(2*proc+1)
+    row = all_coord(2*proc+2)
+    recvcounts(proc) = 0
+    recvdispls(proc) = ((row-1)*blocksize*globalsizes(1) + (col-1)*blocksize) * sizeof('.')
+    idx = typeIdx(col,row,blocks)
+    recvtypes(proc) = blocktypes(idx+1)
+  enddo
+endif
+
+recvcounts(0) = size
+
+call MPI_Alltoallw(localdata, sendcounts, senddispls, sendtypes,     &
+                   globaldata,  recvcounts, recvdispls, recvtypes, &
+                   comm_cart, ierr)
+
+
+
+
+end subroutine collect
+
+
+
 end module comm
 
 
@@ -271,11 +347,11 @@ character, allocatable :: localdata(:,:,:)
 integer   :: myrow, mycol
 integer   ::  i,j,k,proc
 integer, parameter :: LAYERS = 2
-integer, parameter :: NGUARD = 1
-integer, parameter :: BLOCKSIZE = 3
+integer, parameter :: NGUARD = 2
+integer, parameter :: BLOCKSIZE = 5
 integer :: dims(2), coord(2)
 logical :: period(2), reorder
-integer, parameter :: px=2, py=2
+integer, parameter :: px=10, py=10
 character(len=*), parameter :: method = 'alltoall'
 
 call MPI_INIT(ierr)
@@ -350,6 +426,7 @@ localdata = '.'
 !
 call alltoall(myrow, mycol, rank, size, blocks, blocksize,   &
               globalsizes, localsizes, globaldata, localdata, nguard)
+!
 do proc=0,size-1
   if(proc==rank) then
     print*, '--------------'
@@ -371,6 +448,16 @@ do proc=0,size-1
   call MPI_BARRIER(comm_cart, ierr)
 enddo
 
+if(rank==0) then
+  globaldata = '.'
+endif
+
+if(rank==0) then
+  !globaldata = allocchar3darray(globalsizes(1),globalsizes(2),globalsizes(3))
+  print*, 'Global Array'
+  print*, globaldata 
+  call printarray(globaldata,globalsizes(1),globalsizes(2),globalsizes(3))
+endif
 
 call MPI_FINALIZE(ierr);
 
