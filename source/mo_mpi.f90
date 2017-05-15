@@ -1,4 +1,4 @@
-module mpi
+module mo_mpi
  implicit none
  include 'mpif.h'
 
@@ -34,4 +34,4 @@ contains
   call MPI_Finalize(ierr)
  end subroutine finalize_mpi
 
-end module mpi
+end module mo_mpi

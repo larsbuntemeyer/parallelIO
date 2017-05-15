@@ -47,6 +47,7 @@ program parallelIO
   call init_mpi
 
   call init_decomp
+
   !call init_grid
 
   !call decomp

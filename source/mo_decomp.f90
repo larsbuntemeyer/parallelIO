@@ -8,6 +8,7 @@ module mo_decomp
  logical :: period(2), reorder
  integer, allocatable :: all_coord(:)
  integer, parameter :: W=1, N=2, E=3, S=4
+ integer, parameter :: NGUARD=2
 
  contains
 

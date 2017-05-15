@@ -1,7 +1,7 @@
 module io
 
  use netcdf
- use mpi
+ use mo_mpi
  use dbase
  use grid!, only : NDIMS,NX_GLOBAL,NY_GLOBAL,ib_global,jb_global
  implicit none

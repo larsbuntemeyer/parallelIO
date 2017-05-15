@@ -1,7 +1,7 @@
 !
       MODULE MO_PARORG
 !
-      use mpi
+      use mo_mpi
       IMPLICIT NONE
 !
 !**********************************************************************

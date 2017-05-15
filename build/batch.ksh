@@ -43,4 +43,4 @@ export LD_LIBRARY_PATH=${NETCDFC}/lib:${NETCDFF}/lib:${LD_LIBRARY_PATH}
 #map --profile srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
 #map --profile srun --cpu_bind=cores --distribution=block:cyclic main
 #time srun -l --propagate=STACK --cpu_bind=cores --distribution=block:cyclic main
-time srun main 
+time srun ./main 

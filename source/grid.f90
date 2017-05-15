@@ -1,6 +1,6 @@
 module grid
 
-use mpi 
+use mo_mpi 
 
 implicit none
 
