@@ -135,13 +135,6 @@ recvtag=1
 !!
 !if(rank.eq.1) call MPI_Recv(b,1, MPI_INTEGER, 0, recvtag, MPI_COMM_WORLD, status, ierr)
 !
-do proc=0,size
-  if(proc==rank) then
-    print*, rank, a,b, localsizes
-  else
-    call MPI_BARRIER(comm_cart, ierr)
-  endif
-enddo
 ! Send my boundary to North and receive from South
 call MPI_Sendrecv(localdata(1,nguard+1,1),                 1, facetype(2), neighbor(N), sendtag,       &
                   localdata(1,nguard+localsizes(2)+1,1),   1, facetype(2), neighbor(S), recvtag,       &
@@ -221,9 +214,9 @@ if (rank==0) then
   starts      = (/0,0,0/)
   subsizes(3) = localsizes(3)
   do i=0,1
-    subsizes(1) = blocksize!+i
+    subsizes(1) = blocksize+i
     do j=0,1
-      subsizes(2) = blocksize!+j
+      subsizes(2) = blocksize+j
       call MPI_TYPE_CREATE_SUBARRAY(3,globalsizes,subsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,blocktypes(2*j+i+1),ierr)
       call MPI_TYPE_COMMIT(blocktypes(2*j+i+1),ierr)
     enddo
@@ -309,12 +302,12 @@ call MPI_Cart_shift(comm_cart,0,1,NeighBor(W),NeighBor(E),ierr)
 ! Bottom/South and Upper/North neigbors
 call MPI_Cart_shift(comm_cart,1,1,NeighBor(N),NeighBor(S),ierr)
 
-mycol = coord(1)
-myrow = coord(2)
+myrow = coord(1)
+mycol = coord(2)
 
 !create array sizes so that last block has 1 too many rows/cols */
-globalsizes(1) = blocks(1)*BLOCKSIZE + 0 
-globalsizes(2) = blocks(2)*BLOCKSIZE + 0 
+globalsizes(1) = blocks(1)*BLOCKSIZE + 1 
+globalsizes(2) = blocks(2)*BLOCKSIZE + 1 
 globalsizes(3) = LAYERS 
   
 !allocate(globaldata(globalsizes(1),globalsizes(2),globalsizes(3)))
@@ -339,8 +332,8 @@ endif
 
 !the local chunk we'll be receiving */
 localsizes = BLOCKSIZE!+2*NGUARD
-if (isLastRow(myrow,blocks)) localsizes(1) = localsizes(1) + 0
-if (isLastCol(mycol,blocks)) localsizes(2) = localsizes(2) + 0
+if (isLastRow(myrow,blocks)) localsizes(1) = localsizes(1) + 1
+if (isLastCol(mycol,blocks)) localsizes(2) = localsizes(2) + 1
 localsizes(3) = globalsizes(3)
 !localdata = allocchar2darray(localsizes(1),localsizes(2))
 !localdata = allocchar3darray(localsizes(1),localsizes(2),localsizes(3))
