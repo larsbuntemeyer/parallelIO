@@ -156,7 +156,7 @@ call MPI_Sendrecv(localdata(1+nguard,1,1),                      1, facetype(1), 
 
 end subroutine updateBounds
 
-
+!---------------------------------------------------------------------------------------------------------------------------
 
 subroutine alltoall(myrow, mycol, rank, size, blocks, blocksize,   &
                     globalsizes, localsizes, globaldata, localdata, nguard)
@@ -197,6 +197,7 @@ halosizes(2) = localsizes(2) + 2*nguard
 halosizes(3) = localsizes(3) 
 
 starts = (/nguard,nguard,0/)
+
 call MPI_TYPE_CREATE_SUBARRAY(3,halosizes,localsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,recvtypes(0),ierr)
 call MPI_TYPE_COMMIT(recvtypes(0),ierr)
 
@@ -239,7 +240,7 @@ call MPI_Alltoallw(globaldata, sendcounts, senddispls, sendtypes,     &
 
 end subroutine alltoall
 
-
+!---------------------------------------------------------------------------------------------------------------------------
 
 subroutine collect(myrow, mycol, rank, size, blocks, blocksize,   &
                     globalsizes, localsizes, globaldata, localdata, nguard)
@@ -271,8 +272,8 @@ recvcounts = 0
 recvdispls = 0
 recvtypes  = MPI_CHAR
 
-recvcounts(0) = 1 !localsizes(1) * localsizes(2) * localsizes(3)
-recvdispls(0) = 0
+sendcounts(0) = 1 !localsizes(1) * localsizes(2) * localsizes(3)
+senddispls(0) = 0
 
 
 halosizes(1) = localsizes(1) + 2*nguard
@@ -280,12 +281,17 @@ halosizes(2) = localsizes(2) + 2*nguard
 halosizes(3) = localsizes(3) 
 
 starts = (/nguard,nguard,0/)
-call MPI_TYPE_CREATE_SUBARRAY(3,halosizes,localsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,recvtypes(rank),ierr)
-call MPI_TYPE_COMMIT(recvtypes(rank),ierr)
 
-! The originating process needs to allocate and fill the source array,
-! and then define types defining the array chunks to send, and 
-! fill out senddispls, sendcounts (1) and sendtypes.
+!
+! Define the current ranks sendtype
+!
+
+call MPI_TYPE_CREATE_SUBARRAY(3,halosizes,localsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,sendtypes(0),ierr)
+call MPI_TYPE_COMMIT(sendtypes(0),ierr)
+
+! The collecting process needs to allocate and send the source array,
+! and then define types defining the array chunks to collect, and 
+! fill out recvdispls, recvcounts (1) and recvtypes.
 
 if (rank==0) then
   ! 4 types of blocks - 
@@ -293,9 +299,9 @@ if (rank==0) then
   starts      = (/0,0,0/)
   subsizes(3) = localsizes(3)
   do i=0,1
-    subsizes(1) = blocksize!+i
+    subsizes(1) = blocksize+i
     do j=0,1
-      subsizes(2) = blocksize!+j
+      subsizes(2) = blocksize+j
       call MPI_TYPE_CREATE_SUBARRAY(3,globalsizes,subsizes,starts,MPI_ORDER_FORTRAN,MPI_CHAR,blocktypes(2*j+i+1),ierr)
       call MPI_TYPE_COMMIT(blocktypes(2*j+i+1),ierr)
     enddo
@@ -305,21 +311,17 @@ if (rank==0) then
     call rowcol(proc,blocks,row,col)
     col = all_coord(2*proc+1)
     row = all_coord(2*proc+2)
-    recvcounts(proc) = 0
+    recvcounts(proc) = 1
     recvdispls(proc) = ((row-1)*blocksize*globalsizes(1) + (col-1)*blocksize) * sizeof('.')
     idx = typeIdx(col,row,blocks)
     recvtypes(proc) = blocktypes(idx+1)
   enddo
 endif
 
-recvcounts(0) = size
 
 call MPI_Alltoallw(localdata, sendcounts, senddispls, sendtypes,     &
-                   globaldata,  recvcounts, recvdispls, recvtypes, &
+                   globaldata, recvcounts, recvdispls, recvtypes, &
                    comm_cart, ierr)
-
-
-
 
 end subroutine collect
 
@@ -350,7 +352,7 @@ integer, parameter :: NGUARD = 2
 integer, parameter :: BLOCKSIZE = 5
 integer :: dims(2), coord(2)
 logical :: period(2), reorder
-integer, parameter :: px=10, py=10
+integer, parameter :: px=2, py=2 
 character(len=*), parameter :: method = 'alltoall'
 
 call MPI_INIT(ierr)
@@ -436,7 +438,7 @@ do proc=0,size-1
 enddo
 !
 call updateBounds(myrow, mycol, rank, size, blocks, blocksize,   &
-              globalsizes, localsizes, globaldata, localdata, nguard)
+                  globalsizes, localsizes, globaldata, localdata, nguard)
 !
 do proc=0,size-1
   if(proc==rank) then
@@ -450,6 +452,16 @@ enddo
 if(rank==0) then
   globaldata = '.'
 endif
+
+if(rank==0) then
+  !globaldata = allocchar3darray(globalsizes(1),globalsizes(2),globalsizes(3))
+  print*, 'Global Array'
+  print*, globaldata 
+  call printarray(globaldata,globalsizes(1),globalsizes(2),globalsizes(3))
+endif
+
+call collect(myrow, mycol, rank, size, blocks, blocksize,   &
+             globalsizes, localsizes, globaldata, localdata, nguard)
 
 if(rank==0) then
   !globaldata = allocchar3darray(globalsizes(1),globalsizes(2),globalsizes(3))
