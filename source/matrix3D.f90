@@ -378,6 +378,7 @@ call MPI_CART_COORDS(comm_cart,rank,2,coord,ierr)
 
 coord = coord + 1
 
+! Collect all block coordinates
 call MPI_Allgather(coord, 2, MPI_INTEGER, all_coord, 2, MPI_INTEGER, comm_cart, ierr)
 
 ! Left/West and right/Est neigbors
