@@ -18,7 +18,7 @@ CFLAGS = -g -r8 -I/sw/rhel6-x64/netcdf/netcdf_fortran-4.4.3-parallel-bullxmpi-in
 
 # linker flags for netcdf
 LFLAGS = -L/sw/rhel6-x64/netcdf/netcdf_fortran-4.4.3-parallel-bullxmpi-intel14/lib -lnetcdff -L/sw/rhel6-x64/netcdf/parallel_netcdf-1.6.1-bullxmpi-intel14/lib -L/sw/rhel6-x64/netcdf/netcdf_c-4.4.0-parallel-bullxmpi-intel14/lib -Wl,-rpath,/sw/rhel6-x64/netcdf/netcdf_c-4.4.0-parallel-bullxmpi-intel14/lib -lnetcdf -L/sw/rhel6-x64/hdf5/hdf5-1.8.16-parallel-bullxmpi-intel14/lib -Wl,-rpath,/sw/rhel6-x64/hdf5/hdf5-1.8.16-parallel-bullxmpi-intel14/lib -lhdf5 -lhdf5_hl -L/sw/rhel6-x64/sys/libaec-0.3.2-gcc48/lib -Wl,-rpath,/sw/rhel6-x64/sys/libaec-0.3.2-gcc48/lib -lsz -lz -lcurl -Wl,-rpath,/sw/rhel6-x64/netcdf/parallel_netcdf-1.6.1-bullxmpi-intel14/lib -lnetcdf 
-LFLAGS = #-L/usr/lib -lnetcdff -lnetcdf 
+#LFLAGS = #-L/usr/lib -lnetcdff -lnetcdf 
 
 OBJECTS =
 

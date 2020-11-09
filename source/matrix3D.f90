@@ -1,4 +1,9 @@
-
+!
+! Demonstration program of how to do MPI data exchange for a regular
+! 2d decomposed grid, where not all subdomains have neccessarily the
+! same size (as, e.g. in REMO). In this example program, we use the
+! very generic subroutine MPI_ALLTOALLW to send and receive data.
+!
 !-------------------------------------------------------------------
 
 module matrix

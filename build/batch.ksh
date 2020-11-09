@@ -15,10 +15,9 @@ source /sw/rhel6-x64/etc/profile.mistral
 # Environment settings to run a MPI parallel program compiled with BullxMPI and Mellanox libraries
 # Load environment
 module load allinea-forge
-module load intel/15.0.3
-module load mxm/3.3.3002
-module load fca/2.5.2393
-module load bullxmpi_mlx/bullxmpi_mlx-1.2.8.3
+module load intel/18.0.2
+module load mxm/3.4.3082
+module load bullxmpi_mlx/bullxmpi_mlx-1.2.9.2
 # Settings for Open MPI and MXM (MellanoX Messaging) library
 export OMPI_MCA_pml=cm
 export OMPI_MCA_mtl=mxm
