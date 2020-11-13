@@ -1,5 +1,8 @@
 # parallelIO
+
 A fortran environment to write netcdf files in parallel and serial mode using NetCDF4 and MPI.
+
+:construction: This code is under construction and I am aware that it needs much more documentation!
 
 ## test framework
 
