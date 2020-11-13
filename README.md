@@ -19,6 +19,10 @@ REMO IO modules.
 
 ## build instructions
 
+## useful resources
+
+* https://www.fz-juelich.de/ias/jsc/DE/Leistungen/Dienstleistungen/Dokumentation/Praesentationen/folien-esm-user-forum-2020_table.html?nn=2525992
+
 ## contact
 
 lars.buntemeyer@hzg.de
