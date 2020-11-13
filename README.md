@@ -4,6 +4,8 @@ A fortran environment to write netcdf files in parallel and serial mode using Ne
 
 :construction: This code is under construction and I am aware that it needs much more documentation!
 
+This code is used testing different MPI strategies and parallel IP for the regional climate model [REMO](https://www.remo-rcm.de/).
+
 ## test framework
 
 This code is a test framework for different MPI communication strategies for a typical 2d regular,
